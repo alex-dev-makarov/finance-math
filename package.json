@@ -1,6 +1,6 @@
 {
   "name": "@alex-dev-makarov/finance-math",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Shared financial math utilities",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -32,9 +32,9 @@
     "math"
   ],
   "files": [
-  "dist",
-  "src"
-],
+    "dist",
+    "src"
+  ],
   "author": "",
   "license": "ISC",
   "devEngines": {
