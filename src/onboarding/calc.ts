@@ -1,4 +1,9 @@
-import type { ICategoryInput, IEmergencyCushionParams, IRuleOf150Params } from './types';
+import type {
+  ICategoryInput,
+  IEmergencyCushionParams,
+  ILeftoverIncomeParams,
+  IRuleOf150Params,
+} from './types';
 
 export const calculateCategoriesTotal = (categories: readonly ICategoryInput[]) => {
   if (!categories?.length) return 0;
@@ -8,8 +13,12 @@ export const calculateCategoriesTotal = (categories: readonly ICategoryInput[]) 
   }, 0);
 };
 
-export const calculateLeftoverIncome = (monthlyIncome: number, categoriesTotal: number) => {
-  return monthlyIncome - categoriesTotal;
+export const calculateLeftoverIncome = ({
+  monthlyIncome,
+  categoriesTotal,
+  savings = 0,
+}: ILeftoverIncomeParams) => {
+  return monthlyIncome - categoriesTotal - Math.max(0, savings);
 };
 
 export const calculateEmergencyCushion = ({

@@ -31,15 +31,31 @@ describe('calculateCategoriesTotal', () => {
 
 describe('calculateLeftoverIncome', () => {
   it('should return the correct leftover if income is greater than expenses', () => {
-    expect(calculateLeftoverIncome(3000000, 2300000)).toBe(700000);
+    expect(calculateLeftoverIncome({ monthlyIncome: 3000000, categoriesTotal: 2300000 })).toBe(700000);
   });
 
-  it('should return a negative value if expenses exceed income (user is in the red)', () => {
-    expect(calculateLeftoverIncome(2000000, 2500000)).toBe(-500000);
+  it('should subtract savings from the leftover', () => {
+    expect(
+      calculateLeftoverIncome({ monthlyIncome: 3000000, categoriesTotal: 2300000, savings: 200000 }),
+    ).toBe(500000);
+  });
+
+  it('should treat savings as 0 when omitted or negative', () => {
+    expect(calculateLeftoverIncome({ monthlyIncome: 3000000, categoriesTotal: 2300000 })).toBe(700000);
+    expect(
+      calculateLeftoverIncome({ monthlyIncome: 3000000, categoriesTotal: 2300000, savings: -200000 }),
+    ).toBe(700000);
+  });
+
+  it('should return a negative value if expenses and savings exceed income (user is in the red)', () => {
+    expect(calculateLeftoverIncome({ monthlyIncome: 2000000, categoriesTotal: 2500000 })).toBe(-500000);
+    expect(
+      calculateLeftoverIncome({ monthlyIncome: 2000000, categoriesTotal: 1900000, savings: 300000 }),
+    ).toBe(-200000);
   });
 
   it('should handle zero income', () => {
-    expect(calculateLeftoverIncome(0, 1000000)).toBe(-1000000);
+    expect(calculateLeftoverIncome({ monthlyIncome: 0, categoriesTotal: 1000000 })).toBe(-1000000);
   });
 });
 
