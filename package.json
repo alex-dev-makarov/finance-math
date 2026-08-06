@@ -32,8 +32,7 @@
     "math"
   ],
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "author": "",
   "license": "ISC",
