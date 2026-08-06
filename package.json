@@ -1,6 +1,6 @@
 {
   "name": "@alex-dev-makarov/finance-math",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Shared financial math utilities",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -21,7 +21,7 @@
     "build": "tsc",
     "prepublishOnly": "pnpm run build",
     "test": "vitest run",
-  "test:watch": "vitest"
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -43,6 +43,5 @@
   "devDependencies": {
     "typescript": "^7.0.2",
     "vitest": "^4.1.10"
-
   }
 }
