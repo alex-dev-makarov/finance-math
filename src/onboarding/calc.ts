@@ -2,7 +2,9 @@ import type {
   ICategoryInput,
   IEmergencyCushionParams,
   ILeftoverIncomeParams,
+  IRecommendedSavingParams,
   IRuleOf150Params,
+  ISavingRateParams,
 } from './types';
 
 export const calculateCategoriesTotal = (categories: readonly ICategoryInput[]) => {
@@ -19,6 +21,22 @@ export const calculateLeftoverIncome = ({
   savings = 0,
 }: ILeftoverIncomeParams) => {
   return monthlyIncome - categoriesTotal - Math.max(0, savings);
+};
+
+export const calculateSavingRate = ({
+  monthlyIncome,
+  savings,
+}: ISavingRateParams) => {
+  if (monthlyIncome <= 0 || savings <= 0) return 0;
+  return Math.round((savings / monthlyIncome) * 100);
+};
+
+export const calculateRecommendedMonthlySaving = ({
+  monthlyIncome,
+  savingRate,
+}: IRecommendedSavingParams) => {
+  if (monthlyIncome <= 0 || savingRate <= 0) return 0;
+  return Math.round(monthlyIncome * (savingRate / 100));
 };
 
 export const calculateEmergencyCushion = ({

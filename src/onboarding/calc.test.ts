@@ -5,6 +5,8 @@ import {
   calculateEmergencyCushion,
   calculateTargetCapital,
   calculatePassiveIncome,
+  calculateSavingRate,
+  calculateRecommendedMonthlySaving,
 } from './calc';
 
 describe('calculateCategoriesTotal', () => {
@@ -56,6 +58,39 @@ describe('calculateLeftoverIncome', () => {
 
   it('should handle zero income', () => {
     expect(calculateLeftoverIncome({ monthlyIncome: 0, categoriesTotal: 1000000 })).toBe(-1000000);
+  });
+});
+
+describe('calculateSavingRate', () => {
+  it('should return the savings share of income as a rounded percentage', () => {
+    expect(calculateSavingRate({ monthlyIncome: 3000000, savings: 600000 })).toBe(20);
+  });
+
+  it('should round the percentage to the nearest integer', () => {
+    expect(calculateSavingRate({ monthlyIncome: 3000000, savings: 500000 })).toBe(17);
+  });
+
+  it('should return 0 for zero or negative income or savings', () => {
+    expect(calculateSavingRate({ monthlyIncome: 0, savings: 500000 })).toBe(0);
+    expect(calculateSavingRate({ monthlyIncome: 3000000, savings: 0 })).toBe(0);
+    expect(calculateSavingRate({ monthlyIncome: 3000000, savings: -500000 })).toBe(0);
+  });
+});
+
+describe('calculateRecommendedMonthlySaving', () => {
+  it('should calculate the recommended amount for a custom rate', () => {
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 3000000, savingRate: 10 })).toBe(300000);
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 3000000, savingRate: 25 })).toBe(750000);
+  });
+
+  it('should round the result to the nearest integer', () => {
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 3333, savingRate: 15 })).toBe(500);
+  });
+
+  it('should return 0 for zero or negative income or rate', () => {
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 0, savingRate: 10 })).toBe(0);
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 3000000, savingRate: 0 })).toBe(0);
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 3000000, savingRate: -10 })).toBe(0);
   });
 });
 

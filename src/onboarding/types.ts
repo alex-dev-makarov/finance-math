@@ -9,6 +9,16 @@ export interface ILeftoverIncomeParams {
   savings?: number;
 }
 
+export interface ISavingRateParams {
+  monthlyIncome: number;
+  savings: number;
+}
+
+export interface IRecommendedSavingParams {
+  monthlyIncome: number;
+  savingRate: number;
+}
+
 export interface IEmergencyCushionParams {
   monthlyExpenses: number;
   cushionMonths: number;
