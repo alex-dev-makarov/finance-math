@@ -61,6 +61,30 @@ describe('calculateLeftoverIncome', () => {
   });
 });
 
+describe('decimal precision', () => {
+  it('should sum fractional amounts without floating point drift', () => {
+    expect(
+      calculateCategoriesTotal([
+        { name: 'a', currentAmount: 0.1 },
+        { name: 'b', currentAmount: 0.2 },
+      ]),
+    ).toBe(0.3);
+  });
+
+  it('should subtract fractional amounts without floating point drift', () => {
+    expect(calculateLeftoverIncome({ monthlyIncome: 0.3, categoriesTotal: 0.1 })).toBe(0.2);
+  });
+
+  it('should multiply fractional amounts without floating point drift', () => {
+    expect(calculateEmergencyCushion({ monthlyExpenses: 1.1, cushionMonths: 3 })).toBe(3.3);
+  });
+
+  it('should apply a fractional saving rate exactly', () => {
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 1000, savingRate: 1.15 })).toBe(12);
+    expect(calculateRecommendedMonthlySaving({ monthlyIncome: 3333.33, savingRate: 12.5 })).toBe(417);
+  });
+});
+
 describe('calculateSavingRate', () => {
   it('should return the savings share of income as a rounded percentage', () => {
     expect(calculateSavingRate({ monthlyIncome: 3000000, savings: 600000 })).toBe(20);
