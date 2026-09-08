@@ -37,20 +37,14 @@ export const SAVINGS_STATUS = {
 export type SavingsStatus = (typeof SAVINGS_STATUS)[keyof typeof SAVINGS_STATUS];
 
 export interface ISavingsStatusParams {
-  /** Integer minor units (cents). */
   monthlyIncome: number;
-  /** Integer minor units (cents). */
   currentSavings: number;
-  /** Share of monthlyIncome to target, integer percent. Defaults to 10. */
   targetPercentage?: number;
 }
 
 export interface ISavingsStatusResult {
-  /** Target savings for the period, integer minor units (cents). */
   targetAmount: number;
-  /** Percent of monthlyIncome currently saved, integer 0-100+. */
   savedPercentage: number;
   status: SavingsStatus;
-  /** max(0, targetAmount - currentSavings), integer minor units (cents). */
   shortfall: number;
 }
