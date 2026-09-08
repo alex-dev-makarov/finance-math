@@ -9,11 +9,8 @@ implemented with native TS math.
 Plan: `docs/drafts/20260908-1200-analyze-savings-status.md`
 
 - [x] PR-01 — `src/onboarding/types.ts`: savings-status types. See completed-log.md#pr-01
-- [ ] PR-02 — `src/onboarding/calc.ts`: `analyzeSavingsStatus` as an exported arrow
-      const with a single object param, `targetPercentage = 10`, native math +
-      local half-ceil rounding, JSDoc. dependsOn: PR-01. Success: `tsc` passes,
-      no `Decimal` used in this function.
-- [ ] PR-03 — `src/onboarding/calc.test.ts`: vitest coverage for three statuses,
+- [x] PR-02 — `src/onboarding/calc.ts`: `analyzeSavingsStatus`. See completed-log.md#pr-02
+- [~] PR-03 — `src/onboarding/calc.test.ts`: vitest coverage for three statuses,
       default percentage, exact boundary, and all degenerate inputs.
       dependsOn: PR-01, PR-02. Success: `pnpm test` green.
 

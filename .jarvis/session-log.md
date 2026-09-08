@@ -46,3 +46,45 @@
 **Files:** src/onboarding/types.ts (read-only)
 **Task:** verify fix landed, no regression outside the two new interfaces, and that the new JSDoc semantics match the locked contract PR-02 implements against.
 **Status:** dispatched.
+**Result:** verdict **go-ahead**. Verified independently: JSDoc reaches `.d.ts` from a clean outDir; 27 insertions / 0 deletions; pre-existing interfaces byte-identical; bugfixer's parenthetical was a misread of its own before-state, no deletion. JSDoc semantics match the locked PR-02 contract.
+**Action:** created branch `feat/analyze-savings-status` (was on default branch `main`). PR-01 → `[x]`, completed-log.md#pr-01 written, committed as `c16696a`.
+
+---
+### jarvis-executor (haiku) · PR-02
+**Files:** src/onboarding/calc.ts (modified)
+**Task:** implement `analyzeSavingsStatus` — native math only (no Decimal), local half-ceil rounding, full JSDoc, edge-case contract, status precedence.
+**Status:** dispatched.
+**Result:** DONE — `analyzeSavingsStatus` appended to calc.ts (+86 lines), value import of `SAVINGS_STATUS` plus three type imports added. `tsc --noEmit` 0; JSDoc carries into `.d.ts`; no `Decimal` inside the new function (all 11 hits are pre-existing).
+
+---
+### jarvis-reviewer (opus) · PR-02 round 1
+**Files:** src/onboarding/calc.ts, src/onboarding/types.ts (read-only)
+**Task:** STANDARD full checklist on the money-computing logic. Specifically probing: whether `Math.round` really equals `Decimal.ROUND_HALF_CEIL` for reachable inputs incl. negatives (this equivalence is the whole justification for the native-math deviation), float divergence vs the decimal.js siblings, `-0` leakage into the DTO, status precedence on degenerate combos (targetPercentage 0, income 0), and `@example` arithmetic.
+**Status:** dispatched.
+**Result:** verdict **revise** — 1 major, 1 minor, 2 nits. Basis: emitted JS executed against ~20 edge inputs + ~1.5M brute-forced cases against the file's own Decimal `round()` helper.
+**PR-02-D01 (major):** `savedPercentage` divides before multiplying → rounds down where ROUND_HALF_CEIL rounds up; disagrees with sibling `calculateSavingRate` (57 vs 58 at `{200000, 115000}`), 194/40,020 realistic divergences, always low by one. Orchestrator accepted the formula amendment as routine — user's spec didn't pin rounding order, and agreeing with the sibling is the correct reading.
+**Verified clean:** `targetAmount` rounding exact (0 divergences); no `-0` leakage in any field; `@example` arithmetic correct; 26/26 existing tests pass.
+**Also captured:** 13 required test cases for PR-03, incl. the D01 regression asserted directly against `calculateSavingRate`.
+
+---
+### jarvis-bugfixer (sonnet) · PR-02-D01..D04
+**Files:** src/onboarding/calc.ts (modified)
+**Task:** multiply-before-divide for savedPercentage (reproduce-first vs sibling); document status precedence + non-zero NOT_STARTED shortfall; strip `Step N:` comment prefixes; drop redundant JSDoc type tags. Single sequential pass — all four defects are in one file, so no parallel dispatch.
+**Status:** dispatched.
+**Result:** DONE — all four fixed in one pass. D01 reproduce went DIVERGE→MATCH on all four rows; `tsc --noEmit` 0; vitest 26/26; 0 `Step `/`Decimal` hits in the function; `targetAmount` line byte-identical.
+**Unbriefed extra:** bugfixer also amended a stale `@example` comment to the new formula — flagged to round-2 reviewer to confirm it changed only a comment, not the example's claimed output.
+
+---
+### jarvis-reviewer (opus) · PR-02 round 2
+**Files:** src/onboarding/calc.ts (read-only)
+**Task:** independently re-sweep the D01 grid for divergence count, re-check `-0` after the arithmetic change, probe past the `savings * 100 <= 2^53` exactness bound, confirm D02 prose matches the actual branch order, and check the unbriefed `@example` edit.
+**Status:** dispatched.
+**Result:** verdict **go-ahead**. D01 independently re-verified over **638,591 pairs** (78,591 realistic grid + 260,000 exact half-percent constructions + 300,000 random) — **0 divergences**, down from 194/40,020. Rounding equivalence holds because both operands are provably non-negative on every reachable path. No `-0` and no non-integer fields across 16 edge inputs. Six sibling calculators, `HUNDRED`, `RULE_OF_150` and shared `round()` have zero diff lines; `targetAmount` untouched. Unbriefed `@example` edit was comment-only and arithmetically correct (17 under both old and new formulas, so no output was papered over). tsc 0, vitest 26/26.
+**Two nits raised, logged as PR-02-D05/D06:** JSDoc's "shortfall non-zero for NOT_STARTED" is falsified by `targetPercentage: 0`; finite inputs can overflow to `Infinity` above ~1.79e306 (doc-only, no guard warranted).
+**PR-03 amendment from reviewer:** `{200000, 115000}` must now assert `savedPercentage: 58` (was 57); exact-`.5` assertions should be restated as equality with `calculateSavingRate` so the two stay pinned; add an `Object.is(savedPercentage, -0) === false` case for `currentSavings: -0`.
+
+---
+### jarvis-bugfixer (sonnet) · PR-02-D05, D06
+**Files:** src/onboarding/calc.ts (modified — JSDoc prose only)
+**Task:** remove the false "non-zero shortfall" claim; document the Infinity overflow bound. No code changes, no runtime guard.
+**Status:** dispatched.
