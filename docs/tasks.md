@@ -1,6 +1,6 @@
 # Tasks
 
-## Milestone M1 — Savings status analysis
+## Milestone M1 — Savings status analysis  [x] COMPLETE
 
 Goal G1: add `analyzeSavingsStatus` to `src/onboarding` returning a typed
 progress DTO (`targetAmount`, `savedPercentage`, `status`, `shortfall`),
@@ -10,10 +10,7 @@ Plan: `docs/drafts/20260908-1200-analyze-savings-status.md`
 
 - [x] PR-01 — `src/onboarding/types.ts`: savings-status types. See completed-log.md#pr-01
 - [x] PR-02 — `src/onboarding/calc.ts`: `analyzeSavingsStatus`. See completed-log.md#pr-02
-- [~] PR-03 — `src/onboarding/calc.test.ts`: vitest coverage for three statuses,
-      default percentage, exact boundary, and all degenerate inputs.
-      dependsOn: PR-01, PR-02. Success: `pnpm test` green.
-
+- [x] PR-03 — `src/onboarding/calc.test.ts`: vitest coverage. See completed-log.md#pr-03
 ## Cross-cutting architectural notes
 
 - **Two numeric strategies in one module (accepted).** All existing calculators use

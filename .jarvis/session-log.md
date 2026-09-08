@@ -88,3 +88,34 @@
 **Files:** src/onboarding/calc.ts (modified — JSDoc prose only)
 **Task:** remove the false "non-zero shortfall" claim; document the Infinity overflow bound. No code changes, no runtime guard.
 **Status:** dispatched.
+**Result:** DONE — JSDoc bullet corrected, overflow bound documented, no code touched. tsc 0, vitest 26/26, prose confirmed in emitted `.d.ts`. D05/D06 → resolved.
+**Action:** PR-02 → `[x]`, completed-log.md#pr-02 written, committed as `c36a711`.
+
+---
+### jarvis-executor (haiku) · PR-03
+**Files:** src/onboarding/calc.test.ts (modified)
+**Task:** add `describe('analyzeSavingsStatus')` covering the reviewer's 13 required cases plus its two post-fix amendments (the `{200000,115000}` → 58 boundary pinned directly against `calculateSavingRate`, and an `Object.is(-0)` guard).
+**Status:** dispatched.
+**Result:** DONE — 13 tests added, 39/39 passing (26 pre-existing + 13 new), tsc 0, no expectation disagreed with the implementation.
+**Orchestrator verification:** mutation-tested the headline guard myself — reverting `savedPercentage` to the buggy divide-first form fails exactly 1 test; restoring returns 39/39. Guard is real, not tautological. But only ONE test caught a major arithmetic regression, so broader mutation coverage is the focus of review.
+
+---
+### jarvis-reviewer (opus) · PR-03 round 1
+**Files:** src/onboarding/calc.test.ts (read-only), src/onboarding/calc.ts (mutation-tested, must be restored)
+**Task:** hunt tautological assertions; mutation-test six specific mutations (precedence swap, dropped `Math.max` clamp, `>=`→`>`, removed isFinite guard, default 10→15, targetAmount rounding order) and report any producing zero failures as coverage gaps; independently recompute expected literals; verify `Object.is` used for the `-0` guard.
+**Status:** dispatched.
+**Result:** verdict **revise** — 1 major, 3 minor. Ran 16 mutations against the suite; 14 killed, **2 survived with zero failures, both on `targetAmount`** (M6 divide-first, M7 round→floor). Root cause: every asserted `targetAmount` input divides exactly, so no `.5` tie is ever exercised on that path. Confirmed clean: no tautological assertions; all literals independently recomputed; case 8's Infinity bites for the right reason; case 12 correctly uses `Object.is` not `toBe(0)`. `calc.ts` left byte-identical (SHA-1 verified before/after).
+
+---
+### jarvis-bugfixer (sonnet) · PR-03-D01..D04
+**Files:** src/onboarding/calc.test.ts (modified)
+**Task:** add a `.5`-tie guard on `targetAmount` (`{50, 0, 29}` → 15, kills both surviving mutations); assert case 13's full object; assert `savedPercentage: 200` on the uncapped case; assert status in the NOT_STARTED test. Self-verify the new guard by applying and reverting both mutations.
+**Status:** dispatched.
+**Result:** DONE — all four fixed, 40/40 passing, tsc 0. Bugfixer self-verified the D01 guard against both surviving mutations (1 failure each) and restored `calc.ts` from backup.
+**Orchestrator verification:** independently re-ran a six-mutation battery — all six now die (divide-first-target 1, floor-target 1, divide-first-pct 1, gte-to-gt 1, drop-clamp 2, default-15 6). The two round-1 survivors are killed. `calc.ts` confirmed unchanged vs HEAD before and after.
+
+---
+### jarvis-reviewer (opus) · PR-03 round 2
+**Files:** src/onboarding/calc.test.ts (read-only)
+**Task:** LOW-risk narrow — re-derive the four new expected literals from the contract, check the D01 test's intent is honest given `currentSavings: 0`, confirm D04's removed assertion lost no coverage, confirm no pre-existing test was touched, and give a view on whether 40 tests is proportionate.
+**Status:** dispatched.

@@ -63,3 +63,34 @@ already does this today) — a separate packaging concern. Deliberate asymmetry 
 return `NaN` for `NaN` input, this function returns zeros.
 **Metrics:** review rounds 2; defects major:1, minor:1, nit:4
 **Approved:** jarvis-reviewer go-ahead (round 2), plus two follow-up doc nits fixed before commit
+
+## PR-03 — `src/onboarding/calc.test.ts`: vitest coverage
+**Date:** 2026-09-08
+**Shipped:** 14 tests in a `describe('analyzeSavingsStatus')` block, taking the suite from 26 to 40.
+Covers the three statuses, the exact `currentSavings === targetAmount` boundary, the default
+`targetPercentage`, the precedence collision (`targetPercentage: 0` with zero savings →
+`NOT_STARTED`, not `OVER_ACHIEVING`), non-positive and non-finite income, negative-input clamping,
+uncapped `targetPercentage > 100`, `-0` guards via `Object.is`, and integer-ness. Two assertions are
+deliberately relational rather than literal: the rounding boundary is pinned directly against
+sibling `calculateSavingRate` for identical inputs so the two exported functions can never silently
+drift, and the default-parameter test asserts an omitted call equals an explicit `targetPercentage: 10`
+call.
+**Verification:** `npx vitest run` 40/40; `npx tsc --noEmit` exit 0. Verified by mutation testing
+rather than coverage percentage — the reviewer ran 16 mutations against `calc.ts` and the
+orchestrator independently re-ran six. Final state: all die. Sample kill counts — divide-first on
+`targetAmount` 1, `Math.floor` on `targetAmount` 1, divide-first on `savedPercentage` 1, `>=`→`>` 1,
+dropped `Math.max` clamp 2, default `10`→`15` 6. `calc.ts` confirmed byte-identical before and after
+every mutation battery (SHA-1 and `git diff --exit-code`).
+**Notes:** The round-1 suite passed 39/39 yet **two mutations survived, both on `targetAmount`** —
+every test input happened to divide exactly (`3000000@10`, `1000@10`, `1000@500`), so no `.5` tie was
+ever exercised on that path. Reintroducing the exact divide-first bug just fixed on
+`savedPercentage`, or swapping `Math.round` for `Math.floor` on a money amount, would have shipped
+undetected. One added case — `{ monthlyIncome: 50, currentSavings: 0, targetPercentage: 29 }` → raw
+14.5, asserting `targetAmount: 15` — kills both. **Lesson worth carrying: a green suite on a rounding
+function proves nothing unless at least one input lands on a `.5` tie; pick test inputs that divide
+inexactly on purpose.** Known redundancy left in deliberately: case 13's three `Number.isInteger`
+checks are now logically implied by the added `toEqual`, but they keep the test's name truthful and
+would catch a future refactor that changes the literals.
+**Metrics:** review rounds 2; defects major:1, minor:3, nit:0
+**Approved:** jarvis-reviewer go-ahead (round 2), with the major finding independently re-verified by
+the orchestrator via mutation battery

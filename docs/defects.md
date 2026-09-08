@@ -143,3 +143,74 @@ overflow yields `Infinity`.
 real monetary range and a check would cost every caller.
 **Fix:** src/onboarding/calc.ts — added a JSDoc line noting inputs beyond ~1.79e306 minor units can
 overflow to Infinity since only inputs, not intermediate results, are sanitized. No runtime guard.
+
+## PR-03
+
+### [PR-03-D01] `targetAmount` has no rounding or float-drift regression guard
+**Status:** resolved
+**Severity:** major
+**Location:** src/onboarding/calc.test.ts:174,191,229,328 (every `targetAmount` literal)
+**Description:** Found by mutation testing (16 mutations; 2 survive with ZERO failures, both on
+`targetAmount`). Every asserted `targetAmount` uses an input where `income * pct / 100` divides
+exactly (`3000000@10`→300000, `1000@10`→100, `1000@500`→5000, `@0`→0). Case 13's fractional input
+`1001@33` asserts only `Number.isInteger`, not the value. So reintroducing the divide-first bug on
+`targetAmount` (the very bug just fixed on `savedPercentage`), or swapping `Math.round` for
+`Math.floor` on a money amount, each pass 39/39. `savedPercentage` is guarded by case 1 and
+cross-checked against `calculateSavingRate`; `targetAmount` has no equivalent, and its rounding
+direction must stay consistent with the siblings' `ROUND_HALF_CEIL` helper.
+**Root cause:** All chosen test inputs happen to divide exactly, so no `.5` tie is ever exercised
+on the `targetAmount` path.
+**Suggested fix:** Add a case asserting a literal on a `.5`-tie, drift-sensitive input:
+`{ monthlyIncome: 50, currentSavings: 0, targetPercentage: 29 }` → raw 14.5, correct `targetAmount`
+is 15; divide-first gives 14 and `Math.floor` gives 14, so one assertion kills both mutations.
+Reviewer verified it passes on current code and fails under both mutations.
+**Fix:** src/onboarding/calc.test.ts — added `'should round targetAmount half-up on an exact .5 tie'`
+asserting `{ monthlyIncome: 50, currentSavings: 0, targetPercentage: 29 }.targetAmount === 15`.
+Gap independently confirmed closed by the orchestrator: both previously-surviving mutations
+(divide-first-target, floor-target) now fail 1 test each, and all six mutations in the re-run
+battery die. `calc.ts` verified byte-identical throughout.
+**Reproduce first:** apply `sanitizedIncome * (sanitizedPercentage / 100)` to `targetAmount` in calc.ts → suite still passes 39/39, proving the gap.
+
+### [PR-03-D02] Case 13 asserts only integer-ness, so its concrete values are never checked
+**Status:** resolved
+**Severity:** minor
+**Location:** src/onboarding/calc.test.ts:322-332
+**Description:** `{1001, 333, 33}` is the suite's only fractional-arithmetic input and spends it on
+three `Number.isInteger` checks, which only fail if a `Math.round` is deleted outright — any
+wrong-but-integer result (floor, ceil, truncation, drift) passes. Reviewer independently derived
+the correct values from the contract: `targetAmount` 330, `savedPercentage` 33, `shortfall` 0,
+status OVER_ACHIEVING. They match the implementation; they are simply not asserted.
+**Suggested fix:** Keep the `Number.isInteger` checks, add a `toEqual` on the full object.
+**Fix:** src/onboarding/calc.test.ts — kept the three `Number.isInteger` checks, added
+`toEqual({ targetAmount: 330, savedPercentage: 33, status: OVER_ACHIEVING, shortfall: 0 })`.
+
+### [PR-03-D03] `savedPercentage` above 100 is never asserted though the contract allows it
+**Status:** resolved
+**Severity:** minor
+**Location:** src/onboarding/calc.test.ts:311-320
+**Description:** `ISavingsStatusResult.savedPercentage` is documented "integer 0-100+" and there is a
+dedicated test for uncapped `targetPercentage > 100`, but none asserts `savedPercentage > 100`.
+Case 10 produces `savedPercentage: 200` and discards it. A future `Math.min(100, ...)` clamp would
+pass the whole suite.
+**Suggested fix:** Add `expect(result.savedPercentage).toBe(200)` to the existing uncapped case.
+**Fix:** src/onboarding/calc.test.ts — added `expect(result.savedPercentage).toBe(200)` to the
+uncapped-`targetPercentage` case.
+
+### [PR-03-D04] The dedicated NOT_STARTED test never asserts the status it is named for
+**Status:** resolved
+**Severity:** minor
+**Location:** src/onboarding/calc.test.ts:193-201
+**Description:** `'should return NOT_STARTED with non-zero shortfall when savings are zero'` asserts
+`shortfall` twice (`not.toBe(0)` then `toBe(300000)`, the second subsuming the first) and never
+asserts `status`. Not a coverage hole — cases 8 and 9 cover the path incidentally — but the test
+does not verify its own stated contract and misleads the next reader who trusts the name.
+**Suggested fix:** Drop the redundant `not.toBe(0)`, add `expect(result.status).toBe(SAVINGS_STATUS.NOT_STARTED)`.
+**Fix:** src/onboarding/calc.test.ts — removed the redundant `not.toBe(0)`, added
+`expect(result.status).toBe(SAVINGS_STATUS.NOT_STARTED)`.
+
+**Reviewer confirmations (do not re-raise):** no tautological assertions; all literals independently
+recomputed and correct (case 13 → 330/33/0, case 10 → 5000/200/PROGRESSING/3000, happy path →
+300000/17/OVER_ACHIEVING/0); case 8's `Infinity` bites for the right reason (M15 kills it); case 12
+correctly uses `Object.is` for `-0` rather than `toBe(0)`; conventions match the 26 pre-existing
+tests; `SAVINGS_STATUS.*` used throughout with no bare literals; missing EOF newline pre-existing;
+no linter configured. Mutation battery left `calc.ts` byte-identical (SHA-1 verified).
