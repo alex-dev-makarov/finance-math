@@ -1,5 +1,6 @@
 import Decimal from 'decimal.js';
 
+import { SAVINGS_STATUS } from './types';
 import type {
   ICategoryInput,
   IEmergencyCushionParams,
@@ -7,6 +8,9 @@ import type {
   IRecommendedSavingParams,
   IRuleOf150Params,
   ISavingRateParams,
+  ISavingsStatusParams,
+  ISavingsStatusResult,
+  SavingsStatus,
 } from './types';
 
 const HUNDRED = new Decimal(100);
@@ -69,4 +73,50 @@ export const calculateTargetCapital = ({
 export const calculatePassiveIncome = (capitalAmount: number): number => {
   if (capitalAmount <= 0) return 0;
   return new Decimal(capitalAmount).div(RULE_OF_150).floor().toNumber();
+};
+
+/**
+ * Analyzes savings status based on monthly income and current savings.
+ * @param params.monthlyIncome - Monthly gross income in integer minor units (cents).
+ * @param params.currentSavings - Current accumulated savings in integer minor units (cents).
+ * @param [params.targetPercentage=10] - Target savings as integer percent of monthly income.
+ * @returns Object with targetAmount, savedPercentage, status, and shortfall,
+ *   all in integer minor units or percent as appropriate.
+ *
+ */
+export const analyzeSavingsStatus = ({
+  monthlyIncome,
+  currentSavings,
+  targetPercentage = 10,
+}: ISavingsStatusParams): ISavingsStatusResult => {
+  const sanitizedIncome = Number.isFinite(monthlyIncome) ? monthlyIncome : 0;
+  const sanitizedSavings = Decimal.max(0, Number.isFinite(currentSavings) ? currentSavings : 0).toNumber();
+  const sanitizedPercentage = Decimal.max(0, Number.isFinite(targetPercentage) ? targetPercentage : 0).toNumber();
+
+  const targetAmount = calculateRecommendedMonthlySaving({
+    monthlyIncome: sanitizedIncome,
+    savingRate: sanitizedPercentage,
+  });
+  const savedPercentage = calculateSavingRate({
+    monthlyIncome: sanitizedIncome,
+    savings: sanitizedSavings,
+  });
+
+  let status: SavingsStatus;
+  if (sanitizedSavings === 0) {
+    status = SAVINGS_STATUS.NOT_STARTED;
+  } else if (sanitizedSavings >= targetAmount) {
+    status = SAVINGS_STATUS.OVER_ACHIEVING;
+  } else {
+    status = SAVINGS_STATUS.PROGRESSING;
+  }
+
+  const shortfall = Decimal.max(0, new Decimal(targetAmount).minus(sanitizedSavings)).toNumber();
+
+  return {
+    targetAmount,
+    savedPercentage,
+    status,
+    shortfall,
+  };
 };

@@ -27,3 +27,24 @@ export interface IEmergencyCushionParams {
 export interface IRuleOf150Params {
   monthlyExpenses: number;
 }
+
+export const SAVINGS_STATUS = {
+  OVER_ACHIEVING: 'OVER_ACHIEVING',
+  PROGRESSING: 'PROGRESSING',
+  NOT_STARTED: 'NOT_STARTED',
+} as const;
+
+export type SavingsStatus = (typeof SAVINGS_STATUS)[keyof typeof SAVINGS_STATUS];
+
+export interface ISavingsStatusParams {
+  monthlyIncome: number;
+  currentSavings: number;
+  targetPercentage?: number;
+}
+
+export interface ISavingsStatusResult {
+  targetAmount: number;
+  savedPercentage: number;
+  status: SavingsStatus;
+  shortfall: number;
+}
