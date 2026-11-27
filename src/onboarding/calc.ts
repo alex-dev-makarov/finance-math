@@ -1,6 +1,6 @@
-import Decimal from 'decimal.js';
+import { Decimal } from '../shared/decimal.js';
 
-import { SAVINGS_STATUS } from './types';
+import { SAVINGS_STATUS } from './types.js';
 import type {
   ICategoryInput,
   IEmergencyCushionParams,
@@ -11,7 +11,7 @@ import type {
   ISavingsStatusParams,
   ISavingsStatusResult,
   SavingsStatus,
-} from './types';
+} from './types.js';
 
 const HUNDRED = new Decimal(100);
 const RULE_OF_150 = new Decimal(150);

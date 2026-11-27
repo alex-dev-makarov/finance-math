@@ -1,2 +1,2 @@
-export * from './onboarding';
-export * from './currency';
+export * from './onboarding/index.js';
+export * from './currency/index.js';

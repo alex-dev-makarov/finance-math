@@ -1,13 +1,13 @@
-import Decimal from 'decimal.js';
+import { Decimal, type DecimalValue } from '../shared/decimal.js';
 
-import { CURRENCY_MINOR_DIGITS, DECIMAL_PATTERN, DEFAULT_MINOR_DIGITS, RATE_DIGITS, RATE_SCALE } from './constants';
+import { CURRENCY_MINOR_DIGITS, DECIMAL_PATTERN, DEFAULT_MINOR_DIGITS, RATE_DIGITS, RATE_SCALE } from './constants.js';
 import type {
   CurrencyCode,
   IConvertToDefaultArgs,
   IDeriveRateArgs,
   IFromMinorArgs,
   IToMinorArgs,
-} from './types';
+} from './types.js';
 
 // Isolated instance: enough precision for safe-integer products, rounding half away from zero.
 const D = Decimal.clone({ precision: 40, rounding: Decimal.ROUND_HALF_UP });
@@ -19,7 +19,7 @@ const toSafeInteger = (value: Decimal) => {
 
 const pow10 = (digits: number) => new D(10).pow(digits);
 
-const shiftDecimal = (value: Decimal.Value, digits: number) => toSafeInteger(new D(value).times(pow10(digits)));
+const shiftDecimal = (value: DecimalValue, digits: number) => toSafeInteger(new D(value).times(pow10(digits)));
 
 const parseDecimalText = (text: string) => {
   const normalized = text.trim().replace(',', '.');

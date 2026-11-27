@@ -1,5 +1,5 @@
-import { convertToDefault, parseRate, toMinor } from './calc';
-import type { CurrencyCode, IConversionResult, IResolveConversionArgs } from './types';
+import { convertToDefault, parseRate, toMinor } from './calc.js';
+import type { CurrencyCode, IConversionResult, IResolveConversionArgs } from './types.js';
 
 export const parseNbuRateScaled = (nbuRate: string | undefined) =>
   nbuRate === undefined ? null : parseRate(nbuRate);

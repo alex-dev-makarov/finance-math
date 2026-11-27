@@ -3,15 +3,13 @@
   "version": "1.5.1",
   "description": "Shared financial math utilities",
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
   "sideEffects": false,
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
   "publishConfig": {
